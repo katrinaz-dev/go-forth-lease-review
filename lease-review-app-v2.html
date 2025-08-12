@@ -1261,14 +1261,44 @@
         }
         
         function loadSavedApiKey() {
-            // Pre-populate with provided API key (complete key from user)
-            const providedKey = 'YOUR_API_KEY_HERE';
-            document.getElementById('apiKey').value = providedKey;
-            apiKey = providedKey;
-            
-            // Store it for future use
-            localStorage.setItem('openai_api_key', providedKey);
-        }
+    // For Vercel deployment, the environment variable will be injected at build time
+    // We'll need to create a serverless function to handle this securely
+    
+    // For now, let's use a hybrid approach:
+    // 1. Try to get from local storage (if user previously entered)
+    // 2. If not available, prompt once and store locally
+    
+    const savedKey = localStorage.getItem('openai_api_key');
+    
+    if (savedKey) {
+        apiKey = savedKey;
+        document.getElementById('apiKey').value = '••••••••••••••••••••';
+        console.log('API Key loaded from secure storage');
+    } else {
+        // Show a one-time setup dialog
+        showApiKeySetup();
+    }
+}
+
+function showApiKeySetup() {
+    const userKey = prompt(`One-time setup required:
+    
+Please enter your OpenAI API key. This will be stored securely in your browser and never transmitted to our servers.
+
+You can get your API key from: https://platform.openai.com/account/api-keys`);
+    
+    if (userKey && userKey.startsWith('sk-')) {
+        apiKey = userKey;
+        localStorage.setItem('openai_api_key', userKey);
+        document.getElementById('apiKey').value = '••••••••••••••••••••';
+        showSuccess('API key configured successfully!');
+    } else if (userKey) {
+        showError('Invalid API key format. Please try again.');
+        showApiKeySetup(); // Try again
+    } else {
+        showError('API key is required for AI analysis. Please refresh and try again.');
+    }
+}
         
         // Step navigation functions
         function goToStep(stepNumber) {
